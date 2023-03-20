@@ -196,7 +196,7 @@ class Cube:
                 (self.board.basePoint[0]+self.secondCube[0]*self.board.dx+self.secondCube[1]*self.board.cellWidth,self.board.basePoint[1]+self.secondCube[0]*self.board.dy-self.board.cellWidth)
             ]
             self.__draw(points)
-    def move(self, mode, dir=0):
+    def move(self, mode):
         seriesMove = []
         if (mode == 1):
             seriesMove = self.__blindSearchMove()

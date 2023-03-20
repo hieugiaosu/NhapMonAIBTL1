@@ -14,6 +14,7 @@ class TestCase:
             f.seek(self.cusor)
             testCase=""
             buf = f.readline().strip()
+            tc_name = buf
             self.cusor+=(len(buf)+2)
             buf = f.readline().strip()
             self.cusor+=(len(buf)+2)
@@ -21,4 +22,4 @@ class TestCase:
                 testCase+=buf
                 buf = f.readline().strip()
                 self.cusor+=(len(buf)+2)
-            return eval(testCase)
+            return eval(testCase), tc_name

@@ -1,11 +1,11 @@
-from Visualize import Game
+# from Visualize import Game
 from Setting import *
 import pygame as pg
 import numpy as np
 from MonteCarloTreeSearch import MonterCarloTreeSearch
 from BlindSearch import BlindSearch
 from A_star import A_star
-
+from Performance import Performance
 class Board:
     def __init__(self, game):
         self.map = game.testCase[0]
@@ -51,6 +51,8 @@ class Cube:
         self.secondCube = game.testCase[1][1]
         self.board = game.board
         self.color = game.setting.cubeColor
+        self.delayTime = game.setting.delayTime
+        self.time_limit = game.setting.timeLimit
     def __draw(self,points):
         pg.draw.polygon(self.board.screen,pg.Color(self.color),points)
         for i in range (0,4):
@@ -62,23 +64,22 @@ class Cube:
             return True
         if self.firstCube[1] == self.secondCube[1] and np.abs(self.firstCube[0]-self.secondCube[0])<=1:
             return True
-        return False
-            
+        return False            
     def __blindSearchMove(self):
         solver = BlindSearch(self,self.board)
-        ans = solver.solve()
+        performance = Performance(solver.solve,self.time_limit,[[self.firstCube,self.secondCube]])
+        ans = performance.run()
         return ans
-    
     def __a_starMove(self):
         solver = A_star(self,self.board)
-        ans = solver.solve()
+        performance = Performance(solver.solve,self.time_limit,[[self.firstCube,self.secondCube]])
+        ans = performance.run()
         return ans
-
     def __monteCarloTreeSearchMove(self):
         solver = MonterCarloTreeSearch(self,self.board)
-        ans = solver.solve()
+        performance = Performance(solver.solve,self.time_limit,[[self.firstCube,self.secondCube]])
+        ans = performance.run()
         return ans
-
     def draw(self):
         if self.firstCube == self.secondCube:
             points = [
@@ -196,137 +197,70 @@ class Cube:
             ]
             self.__draw(points)
     def move(self, mode, dir=0):
-        if mode !=1:
-            seriesMove = []
-            if (mode == 2):
-                seriesMove = self.__blindSearchMove()
-            elif (mode == 3):
-                seriesMove = self.__a_starMove()
-            elif (mode == 4):
-                seriesMove = self.__monteCarloTreeSearchMove()
-            print (seriesMove)
-            open('Output.txt','a',encoding='utf-8').writelines(str(seriesMove)+'\n')
-            for i in seriesMove:
-                self.firstCube, self.secondCube = i
-                buttonListKeys = self.board.buttonList.keys()
-                if (self.firstCube not in self.board.map.keys()) or (self.secondCube not in self.board.map.keys()) or (self.board.map[self.firstCube]==0) or (self.board.map[self.secondCube]==0):
-                    break
-                if (self.firstCube in buttonListKeys and self.board.buttonList[self.firstCube][0]==1):
-                    for j in self.board.buttonList[self.firstCube][1]:
-                        if j in self.board.map.keys():
-                            self.board.map[j]+=2
-                            if self.board.map[j] >=3:
-                                self.board.map[j] = 0
-                        else:
-                            self.board.map[j]=2
-                elif ((self.secondCube in buttonListKeys and self.board.buttonList[self.secondCube][0]==1)):
-                    for j in self.board.buttonList[self.secondCube][1]:
-                        if j in self.board.map.keys():
-                            self.board.map[j]+=2
-                            if self.board.map[j] >=3:
-                                self.board.map[j] = 0
-                        else:
-                            self.board.map[j]=2
-                elif (self.firstCube == self.secondCube and self.firstCube in buttonListKeys and self.board.buttonList[self.firstCube][0]==2):
-                    for j in self.board.buttonList[self.firstCube][1]:
-                        if j in self.board.map.keys():
-                            self.board.map[j]+=2
-                            if self.board.map[j] >=3:
-                                self.board.map[j] = 0
-                        else:
-                            self.board.map[j]=2
-                elif (self.secondCube in buttonListKeys and self.board.buttonList[self.secondCube][0]==3) and self.firstCube == self.secondCube:
-                    [self.firstCube,self.secondCube] = self.board.buttonList[self.secondCube][1]
-                self.board.screen.fill(pg.Color(self.board.color[0]))
-                self.board.draw()
-                self.draw()
-                pg.display.update()
-                pg.time.delay(1000)
-            if (self.firstCube not in self.board.map.keys()) or (self.secondCube not in self.board.map.keys()) or (self.board.map[self.firstCube]==0) or (self.board.map[self.secondCube]==0):
-                print("You lose")
-                open('Output.txt','a',encoding='utf-8').writelines("You lose\n")
-                return 0
-            elif ((self.firstCube == self.secondCube) and (self.board.map[self.secondCube]==3)):
-                print("you win")
-                open('Output.txt','a',encoding='utf-8').writelines("You win\n")
-                return 0
-            elif (self.firstCube == self.secondCube) and (self.board.map[self.secondCube]==1):
-                print("You lose")
-                open('Output.txt','a',encoding='utf-8').writelines("You lose\n")
-                return 0
-            else:
-                print("can't solve")
-                open('Output.txt','a',encoding='utf-8').writelines("Can't Solve\n")
-                return 0
-                    
-        else:
-            if self.firstCube == self.secondCube:
-                if dir == 'w':
-                    self.firstCube = (self.firstCube[0]-2,self.firstCube[1])
-                    self.secondCube = (self.secondCube[0]-1,self.secondCube[1])
-                elif dir == 's':
-                    self.firstCube = (self.firstCube[0]+1,self.firstCube[1])
-                    self.secondCube =(self.secondCube[0]+2,self.secondCube[1])
-                elif dir == 'a':
-                    self.firstCube = (self.firstCube[0],self.firstCube[1]-2)
-                    self.secondCube =(self.secondCube[0],self.secondCube[1]-1)
-                elif dir == 'd':
-                    self.firstCube = (self.firstCube[0],self.firstCube[1]+1)
-                    self.secondCube =(self.secondCube[0],self.secondCube[1]+2)
-            elif self.firstCube[0]==self.secondCube[0]:
-                if dir == 'w':
-                    self.firstCube = (self.firstCube[0]-1,self.firstCube[1])
-                    self.secondCube = (self.secondCube[0]-1,self.secondCube[1])
-                elif dir == 's':
-                    self.firstCube = (self.firstCube[0]+1,self.firstCube[1])
-                    self.secondCube =(self.secondCube[0]+1,self.secondCube[1])
-                elif dir == 'a':
-                    self.firstCube = (self.firstCube[0],self.firstCube[1]-1)
-                    self.secondCube =(self.secondCube[0],self.secondCube[1]-2)
-                elif dir == 'd':
-                    self.firstCube = (self.firstCube[0],self.firstCube[1]+2)
-                    self.secondCube =(self.secondCube[0],self.secondCube[1]+1)
-            elif self.firstCube[1]==self.secondCube[1]:
-                if dir == 'w':
-                    self.firstCube = (self.firstCube[0]-1,self.firstCube[1])
-                    self.secondCube = (self.secondCube[0]-2,self.secondCube[1])
-                elif dir == 's':
-                    self.firstCube = (self.firstCube[0]+2,self.firstCube[1])
-                    self.secondCube =(self.secondCube[0]+1,self.secondCube[1])
-                elif dir == 'a':
-                    self.firstCube = (self.firstCube[0],self.firstCube[1]-1)
-                    self.secondCube =(self.secondCube[0],self.secondCube[1]-1)
-                elif dir == 'd':
-                    self.firstCube = (self.firstCube[0],self.firstCube[1]+1)
-                    self.secondCube =(self.secondCube[0],self.secondCube[1]+1)
-            else:
-                pass
+        seriesMove = []
+        if (mode == 1):
+            seriesMove = self.__blindSearchMove()
+        elif (mode == 2):
+            seriesMove = self.__a_starMove()
+        elif (mode == 3):
+            seriesMove = self.__monteCarloTreeSearchMove()
+        print (seriesMove)
+        open('Output.txt','a',encoding='utf-8').writelines("Solution: "+str(seriesMove)+"\nSolution length: "+ str(len(seriesMove))+" \n")
+        for i in seriesMove:
+            self.firstCube, self.secondCube = i
             buttonListKeys = self.board.buttonList.keys()
+            if (self.firstCube not in self.board.map.keys()) or (self.secondCube not in self.board.map.keys()) or (self.board.map[self.firstCube]==0) or (self.board.map[self.secondCube]==0):
+                break
+            if (self.firstCube == self.secondCube) and self.board.map[self.firstCube]==1:
+                break                   
             if (self.firstCube in buttonListKeys and self.board.buttonList[self.firstCube][0]==1):
-                for i in self.board.buttonList[self.firstCube][1]:
-                    if i in self.board.map.keys():
-                        self.board.map[i]+=2
-                        if self.board.map[i] >=3:
-                            self.board.map[i] = 0
+                for j in self.board.buttonList[self.firstCube][1]:
+                    if j in self.board.map.keys():
+                        self.board.map[j]+=2
+                        if self.board.map[j] >=3:
+                            self.board.map[j] = 0
                     else:
-                        self.board.map[i]=2
+                        self.board.map[j]=2
             elif ((self.secondCube in buttonListKeys and self.board.buttonList[self.secondCube][0]==1)):
-                for i in self.board.buttonList[self.secondCube][1]:
-                    if i in self.board.map.keys():
-                        self.board.map[i]+=2
-                        if self.board.map[i] >=3:
-                            self.board.map[i] = 0
+                for j in self.board.buttonList[self.secondCube][1]:
+                    if j in self.board.map.keys():
+                        self.board.map[j]+=2
+                        if self.board.map[j] >=3:
+                            self.board.map[j] = 0
                     else:
-                        self.board.map[i]=2
+                        self.board.map[j]=2
             elif (self.firstCube == self.secondCube and self.firstCube in buttonListKeys and self.board.buttonList[self.firstCube][0]==2):
-                for i in self.board.buttonList[self.firstCube][1]:
-                    if i in self.board.map.keys():
-                        self.board.map[i]+=2
-                        if self.board.map[i] >=3:
-                            self.board.map[i] = 0
+                for j in self.board.buttonList[self.firstCube][1]:
+                    if j in self.board.map.keys():
+                        self.board.map[j]+=2
+                        if self.board.map[j] >=3:
+                            self.board.map[j] = 0
                     else:
-                        self.board.map[i]=2
-            elif ((self.secondCube in buttonListKeys and self.board.buttonList[self.secondCube][0]==3) and self.firstCube == self.secondCube):
-                    [self.firstCube,self.secondCube] = self.board.buttonList[self.secondCube][1]
-        return 1
-
+                        self.board.map[j]=2
+            elif (self.secondCube in buttonListKeys and self.board.buttonList[self.secondCube][0]==3) and self.firstCube == self.secondCube:
+                [self.firstCube,self.secondCube] = self.board.buttonList[self.secondCube][1]
+            self.board.screen.fill(pg.Color(self.board.color[0]))
+            self.board.draw()
+            self.draw()
+            pg.display.update()
+            pg.time.delay(self.delayTime)
+        if (self.firstCube not in self.board.map.keys()) or (self.secondCube not in self.board.map.keys()) or (self.board.map[self.firstCube]==0) or (self.board.map[self.secondCube]==0):
+            print("You lose")
+            open('Output.txt','a',encoding='utf-8').writelines("You lose\n")
+            return 0
+        elif (self.firstCube == self.secondCube) and self.board.map[self.firstCube]==1:
+            print("You lose")
+            open('Output.txt','a',encoding='utf-8').writelines("You lose\n")
+            return 0
+        elif ((self.firstCube == self.secondCube) and (self.board.map[self.secondCube]==3)):
+            print("You win")
+            open('Output.txt','a',encoding='utf-8').writelines("Status: You win\n \n")
+            return 0
+        elif (self.firstCube == self.secondCube) and (self.board.map[self.secondCube]==1):
+            print("You lose")
+            open('Output.txt','a',encoding='utf-8').writelines("Status: You lose\n \n")
+            return 0
+        else:
+            print("Can't solve")
+            open('Output.txt','a',encoding='utf-8').writelines("Status: Can't solve\n \n")
+            return 0

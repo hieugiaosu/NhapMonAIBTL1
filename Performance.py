@@ -28,7 +28,6 @@ class Performance:
         process.memory_info().rss
         elapsed_time = time.perf_counter() - start_time
         self.time_limit = time_limit + elapsed_time
-        self.__init_time_waste = elapsed_time
 
     def run(self):
         # if __name__ == '__main__':
@@ -49,8 +48,8 @@ class Performance:
         else:
             elapsed_time = result_queue.get()
             with open('Output.txt',mode='a',encoding='utf-8') as f:
-                f.writelines(f"Executing Time: {elapsed_time - self.__init_time_waste:.5f} \n")
+                f.writelines(f"Executing Time: {elapsed_time:.5f} \n")
                 f.writelines(f"Memory Used: {result[1]} bytes \n")
-                print(f"Executing Time: {elapsed_time - self.__init_time_waste:.5f}")
+                print(f"Executing Time: {elapsed_time:.5f}")
                 print(f"Memory Used: {result[1]} bytes")
             return result[0]

@@ -14,4 +14,4 @@ class Setting:
         self.screenHeight = int((self.boardSize+4)*self.dy)
         self.inputFileName = 'Input.txt'
         self.delayTime = 100
-        self.timeLimit = 20
+        self.timeLimit = 100
